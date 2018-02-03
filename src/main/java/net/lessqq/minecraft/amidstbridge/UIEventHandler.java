@@ -18,6 +18,7 @@ import amidst.mojangapi.world.biome.BiomeColor;
 import amidst.mojangapi.world.biome.BiomeType;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -34,19 +35,19 @@ public class UIEventHandler {
   @SubscribeEvent
   public void initGui(InitGuiEvent.Post evt) {
     GuiScreen gui = evt.getGui();
-    if (gui instanceof GuiMainMenu) {
+    if (gui instanceof GuiOptions) {
       int maxy = 0;
       for (GuiButton b : evt.getButtonList()) {
         maxy = b.y > maxy ? b.y : maxy;
       }
-      amidstButton = new GuiButton(Integer.MIN_VALUE, gui.width / 2 - 100, maxy + 30, 98, 20, "Launch Amidst");
+      amidstButton = new GuiButton(Integer.MIN_VALUE, 2, 2, 98, 20, "§nLaunch Amidst§r");
       evt.getButtonList().add(amidstButton);
     }
   }
 
   @SubscribeEvent
   public void postEvent(GuiScreenEvent.ActionPerformedEvent.Post evt) {
-    if (evt.getGui() instanceof GuiMainMenu && evt.getButton() == amidstButton) {
+    if (evt.getGui() instanceof GuiOptions && evt.getButton() == amidstButton) {
       startAmidst();
     }
   }
