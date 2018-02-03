@@ -1,0 +1,16 @@
+[
+{
+  "modid": "amidstbridge",
+  "name": "Amidst Bridge mod",
+  "description": "A lightweight bridge between AMIDST and Forge",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Christian Fraenkel"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
