@@ -1,4 +1,4 @@
-package net.lessqq.minecraft.amidstbridge;
+package net.lessqq.amidstforge;
 
 import amidst.mojangapi.minecraftinterface.MinecraftInterface;
 import amidst.mojangapi.minecraftinterface.MinecraftInterfaceException;

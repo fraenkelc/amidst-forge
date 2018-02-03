@@ -15,7 +15,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 
 version gitVersion()
 group = "net.lessqq.minecraft.amidstbridge" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "amidstbridge"
+archivesBaseName = "amidst-forge"
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -62,7 +62,7 @@ jar {
 
 
 dependencies {
-    embed files('lib/amidst-v4-3-beta2.jar')
+    embed project(':amidst')
 }
 
 processResources {
@@ -83,4 +83,27 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+}
+
+project(':amidst') {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+	
+	repositories {
+		jcenter()
+	}
+	dependencies {
+		compile 'com.google.code.gson:gson:2.5'
+		compile 'com.miglayout:miglayout-swing:4.2'
+		compile 'args4j:args4j:2.32'
+		compile files('lib/JNBT_1.3.jar')
+		testCompile 'junit:junit:4.11'
+	}
+	compileJava {
+		sourceCompatibility = targetCompatibility = '1.8'
+	}
+	
+	def props = new Properties()
+	file('src/main/resources/amidst/metadata.properties').withInputStream { props.load(it) }
+	version = "${props['amidst.version.major']}.${props['amidst.version.minor']}${props['amidst.version.preReleaseSuffix']?.trim() ? "-" + props['amidst.version.preReleaseSuffix']?.trim() : ''}"
 }

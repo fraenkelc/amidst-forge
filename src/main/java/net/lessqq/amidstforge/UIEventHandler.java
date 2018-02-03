@@ -1,12 +1,9 @@
-package net.lessqq.minecraft.amidstbridge;
+package net.lessqq.amidstforge;
 
 import java.lang.reflect.Field;
-import java.util.Random;
 import java.util.prefs.Preferences;
 
 import javax.swing.SwingUtilities;
-
-import com.google.common.reflect.Reflection;
 
 import amidst.Amidst;
 import amidst.AmidstMetaData;
@@ -14,19 +11,16 @@ import amidst.AmidstSettings;
 import amidst.Application;
 import amidst.PerApplicationInjector;
 import amidst.ResourceLoader;
-import amidst.mojangapi.world.biome.BiomeColor;
-import amidst.mojangapi.world.biome.BiomeType;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-@EventBusSubscriber(modid = AmidstBridgeMod.MOD_ID)
+@EventBusSubscriber(modid = AmidstForgeMod.MOD_ID)
 public class UIEventHandler {
 
   private GuiButton amidstButton;
@@ -40,7 +34,7 @@ public class UIEventHandler {
       for (GuiButton b : evt.getButtonList()) {
         maxy = b.y > maxy ? b.y : maxy;
       }
-      amidstButton = new GuiButton(Integer.MIN_VALUE, 2, 2, 98, 20, "§nLaunch Amidst§r");
+      amidstButton = new GuiButton(Integer.MIN_VALUE, 2, 2, 98, 20, I18n.format("amidstforge.ui.button.label"));
       evt.getButtonList().add(amidstButton);
     }
   }

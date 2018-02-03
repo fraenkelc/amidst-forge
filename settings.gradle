@@ -1,0 +1,2 @@
+rootProject.name = 'amidst-forge'
+include 'amidst'

@@ -1,0 +1,4 @@
+[submodule "amidst"]
+	path = amidst
+	url = ../amidst.git
+	branch = forge

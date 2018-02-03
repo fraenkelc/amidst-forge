@@ -1,8 +1,8 @@
 [
 {
-  "modid": "amidstbridge",
+  "modid": "amidst-forge",
   "name": "Amidst Bridge mod",
-  "description": "A lightweight bridge between AMIDST and Forge",
+  "description": "Integrates modded worldgen into Amidst",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
