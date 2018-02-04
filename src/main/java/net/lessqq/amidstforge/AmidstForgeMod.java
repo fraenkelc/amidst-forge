@@ -11,8 +11,9 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
-@Mod(modid = AmidstForgeMod.MOD_ID, name = AmidstForgeMod.NAME, version = AmidstForgeMod.VERSION, acceptableRemoteVersions = "*", clientSideOnly = true, useMetadata = true)
+@Mod(modid = AmidstForgeMod.MOD_ID, name = AmidstForgeMod.NAME, version = AmidstForgeMod.VERSION, acceptableRemoteVersions = "*", useMetadata = true)
 public class AmidstForgeMod {
   public static final String MOD_ID = "amidst-forge";
   public static final String NAME = "Amidst for Forge";
@@ -36,7 +37,7 @@ public class AmidstForgeMod {
   }
 
   private void updateBiomeList(Random random) {
-    Biome.REGISTRY.forEach(b -> maybeAddBiome(random, b, Biome.REGISTRY.getIDForObject(b)));
+    ForgeRegistries.BIOMES.forEach(b -> maybeAddBiome(random, b, Biome.REGISTRY.getIDForObject(b)));
   }
 
   private void maybeAddBiome(Random random, Biome b, int idx) {

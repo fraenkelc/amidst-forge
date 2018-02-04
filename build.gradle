@@ -60,9 +60,20 @@ jar {
     }
 }
 
+/* // enable this to test with Integrated Dynamics
+repositories {
+    maven {
+        name "Cyclops Repo"
+        url "https://oss.jfrog.org/artifactory/simple/libs-release/"
+    }
+}
+*/
 
 dependencies {
     embed project(':amidst')
+    // enable these to test with Integrated Dynamics
+    //compile "org.cyclops.integrateddynamics:IntegratedDynamics:1.12.2-0.11.0-1079:deobf"
+    //compile "org.cyclops.commoncapabilities:CommonCapabilities:1.12.2-1.4.0-185:deobf"
 }
 
 processResources {
