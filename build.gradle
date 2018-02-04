@@ -5,6 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
     }
 }
 plugins {
@@ -70,7 +71,7 @@ repositories {
 */
 
 dependencies {
-    embed project(':amidst')
+    embed project(path: ':amidst', configuration: 'shadow')
     // enable these to test with Integrated Dynamics
     //compile "org.cyclops.integrateddynamics:IntegratedDynamics:1.12.2-0.11.0-1079:deobf"
     //compile "org.cyclops.commoncapabilities:CommonCapabilities:1.12.2-1.4.0-185:deobf"
@@ -99,10 +100,19 @@ processResources {
 project(':amidst') {
 	apply plugin: 'java'
 	apply plugin: 'eclipse'
+	apply plugin: 'com.github.johnrengelman.shadow'
 	
 	repositories {
 		jcenter()
 	}
+	
+	shadowJar {
+		relocate 'org.jnbt', 'amidst.shadow.org.jnbt'
+		relocate 'com.google.gson', 'amidst.shadow.com.google.gson'
+		relocate 'org.kohsuke.args4j', 'amidst.shadow.org.kohsuke.args4j'
+		relocate 'net.miginfocom', 'amidst.shadow.net.miginfocom'
+	}
+	
 	dependencies {
 		compile 'com.google.code.gson:gson:2.5'
 		compile 'com.miglayout:miglayout-swing:4.2'
