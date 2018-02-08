@@ -62,7 +62,7 @@ jar {
 			attributes(
 			  'Implementation-Version': project.version,
 			  'ContainedDeps': configurations.embed.files.collect { it.getName() }.join(" "),
-			  'FMLAT': 'amidstbridge_at.cfg'
+			  'FMLAT': sourceSets.main.resources.files.collect{it.getName()}.findAll{it.endsWith("_at.cfg")}.join(" ")
 			  )
         }
     }
