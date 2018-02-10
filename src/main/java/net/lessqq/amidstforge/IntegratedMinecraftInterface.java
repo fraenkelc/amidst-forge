@@ -11,7 +11,7 @@ import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
 import net.minecraft.world.storage.WorldInfo;
 
-public class IntegratedMinecraftInstance implements MinecraftInterface {
+public class IntegratedMinecraftInterface implements MinecraftInterface {
 
   private BiomeProvider biomeProvider;
 

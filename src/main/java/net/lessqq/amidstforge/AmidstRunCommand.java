@@ -25,7 +25,7 @@ public class AmidstRunCommand extends CommandBase {
 
   @Override
   public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-    eventHandler.startAmidst();
+    eventHandler.startAmidst(new IntegratedMinecraftInterface());
   }
 
 }

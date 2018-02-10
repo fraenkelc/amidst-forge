@@ -11,12 +11,17 @@ import amidst.AmidstSettings;
 import amidst.Application;
 import amidst.PerApplicationInjector;
 import amidst.ResourceLoader;
+import amidst.mojangapi.minecraftinterface.MinecraftInterface;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.event.world.WorldEvent.Load;
+import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -24,7 +29,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class UIEventHandler {
 
   private GuiButton amidstButton;
+  private GuiButton overworldButton;
   private Application application;
+  private boolean serverRunning = false;
 
   @SubscribeEvent
   public void initGui(InitGuiEvent.Post evt) {
@@ -35,18 +42,42 @@ public class UIEventHandler {
         maxy = b.y > maxy ? b.y : maxy;
       }
       amidstButton = new GuiButton(Integer.MIN_VALUE, 2, 2, 98, 20, I18n.format("amidstforge.ui.button.label"));
+      overworldButton = new GuiButton(Integer.MIN_VALUE, gui.width - 100 , 2, 98, 20,
+          I18n.format("amidstforge.ui.overworldbutton.label"));
+      overworldButton.enabled = serverRunning;
       evt.getButtonList().add(amidstButton);
+      evt.getButtonList().add(overworldButton);
     }
+  }
+
+  @SubscribeEvent
+  public void onWorldLoad(Load evt) {
+    WorldServer overworld = DimensionManager.getWorld(0);
+    if (overworld != null && overworld == evt.getWorld())
+      serverRunning = true;
+    if (overworldButton != null)
+      overworldButton.enabled = serverRunning;
+  }
+
+  @SubscribeEvent
+  public void onWorldUnload(Unload evt) {
+    WorldServer overworld = DimensionManager.getWorld(0);
+    if (overworld == null || overworld == evt.getWorld())
+      serverRunning = false;
+    if (overworldButton != null)
+      overworldButton.enabled = serverRunning;
   }
 
   @SubscribeEvent
   public void postEvent(GuiScreenEvent.ActionPerformedEvent.Post evt) {
     if (evt.getGui() instanceof GuiOptions && evt.getButton() == amidstButton) {
-      startAmidst();
+      startAmidst(new IntegratedMinecraftInterface());
+    } else if (evt.getGui() instanceof GuiOptions && evt.getButton() == overworldButton) {
+      startAmidst(new OverworldMinecraftInterface());
     }
   }
 
-  public synchronized void startAmidst() {
+  public synchronized void startAmidst(MinecraftInterface minecraftInterface) {
     if (application != null) {
       Object mainWindow = getMainWindow(application);
       if (mainWindow != null)
@@ -56,7 +87,7 @@ public class UIEventHandler {
 
     SwingUtilities.invokeLater(() -> {
       try {
-        PerApplicationInjector injector = new PerApplicationInjector(new IntegratedMinecraftInstance(),
+        PerApplicationInjector injector = new PerApplicationInjector(minecraftInterface,
             AmidstMetaData.from(ResourceLoader.getProperties("/amidst/metadata.properties"),
                 ResourceLoader.getImage("/amidst/icon/amidst-16x16.png"),
                 ResourceLoader.getImage("/amidst/icon/amidst-32x32.png"),
