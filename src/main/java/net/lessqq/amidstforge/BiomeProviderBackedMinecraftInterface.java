@@ -43,9 +43,13 @@ public abstract class BiomeProviderBackedMinecraftInterface implements Minecraft
 
     private void checkForInvalidData(int[] biomeData) {
         for (int i = 0; i < biomeData.length; i++)
-            if (biomeData[i] < 0 || biomeData[i] > 255)
-                throw new RuntimeException(
-                        "BiomeProvider inoperable, please restart or use the \"Amidst overworld\" feature.");
+            if (biomeData[i] < 0 || biomeData[i] > 255) {
+                RuntimeException exception = new RuntimeException("BiomeProvider returned invalid Biome ID: '" + biomeData[i]
+                    + "'. Your mod combination might not be supported.");
+                exception.fillInStackTrace();
+                AmidstForgeMod.LOGGER.error("Biome data check failed.", exception);
+                throw exception;
+            }
     }
 
     /**
