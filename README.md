@@ -37,6 +37,7 @@ Some general points on Mod compatibility:
 |-----|--------------|
 |[Traverse](https://minecraft.curseforge.com/projects/traverse)| Biomes are only added to generation once a world is loaded. Create a new world and use "Launch Amidst" after you joined the world |
 |[Climate Control/Geographicraft](https://minecraft.curseforge.com/projects/climate-control-geographicraft)| Geographicraft ties its generation to the worlds dimensions. Create a world with the desired seed, then use "Amidst Overworld" to explore that seed. Feature / Structure locations are not listed correctly on the map |
+|[OpenTerrainGenerator](https://minecraft.curseforge.com/projects/open-terrain-generator)| OTG supports more than 256 biomes by using a feature called "replaceToBiomeName". Worlds using this feature will not open in Amidst because it's not possible to map all biomes to the ID range supported by Amidst. This affects for example the [Biome Bundle](https://minecraft.curseforge.com/projects/biome-bundle) mod.|
 
 
 ### Miscellaneous
