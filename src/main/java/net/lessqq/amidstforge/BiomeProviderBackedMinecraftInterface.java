@@ -100,18 +100,12 @@ public abstract class BiomeProviderBackedMinecraftInterface implements Minecraft
     }
 
     private void maybeAddBiome(Random random, Biome b, int idx) {
-        amidst.mojangapi.world.biome.Biome biome = amidst.mojangapi.world.biome.Biome.getByName(b.getBiomeName());
-        if (biome == null) {
-            try {
-                biome = amidst.mojangapi.world.biome.Biome.getByIndex(idx);
-            } catch (UnknownBiomeIndexException e) {
-                // this is expected.
-            }
-            BiomeColor color = biome != null ? biome.getDefaultColor()
-                    : BiomeColor.from(random.nextInt(255), random.nextInt(255), random.nextInt(255));
-            biome = new amidst.mojangapi.world.biome.Biome(b.getBiomeName(), idx, color, BiomeType.OCEAN);
+        try {
+            amidst.mojangapi.world.biome.Biome.getByIndex(idx);
+        } catch (UnknownBiomeIndexException e) {
+          // this constructor call has side effects.
+          new amidst.mojangapi.world.biome.Biome(b.getBiomeName(), idx, BiomeColor.from(random.nextInt(255), random.nextInt(255), random.nextInt(255)), BiomeType.OCEAN);
         }
-
     }
 
 }
