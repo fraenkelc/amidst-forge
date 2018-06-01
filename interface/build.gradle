@@ -1,0 +1,76 @@
+plugins {
+    id 'java'
+}
+
+def flatbuffers_version = '1.11.0'
+
+configurations {
+    flatbuffers_compiler
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+sourceSets {
+    main {
+        java {
+            srcDir "src/generated/java"
+        }
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+
+    compile "com.google.flatbuffers:flatbuffers-java:$flatbuffers_version"
+    compile group: 'org.jboss.xnio', name: 'xnio-nio', version: '3.7.7.Final'
+
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:1.9.5"
+}
+
+//
+def compilerFile = file("$buildDir/flatc_windows_exe.zip")
+
+task downloadCompiler {
+    outputs.files compilerFile
+    doLast {
+        compilerFile << new URL("https://github.com/google/flatbuffers/releases/download/v1.11.0/flatc_windows_exe.zip").getBytes()
+    }
+}
+
+task unpackCompiler(type: Copy) {
+    dependsOn downloadCompiler
+    destinationDir = file("$buildDir/tmp/flatc")
+    from({ zipTree(compilerFile) })
+}
+
+task createFlatBuffers() {
+    inputs.files(fileTree("src/main/fbs").include("**/*.fbs"))
+    outputs.dir("src/generated/java")
+    outputs.upToDateWhen { false }
+    group = "Generation"
+    dependsOn tasks["unpackCompiler"]
+    def outputDir = file("src/generated/java")
+
+    doLast {
+        delete { del ->
+            del.delete(fileTree(outputDir).include("**/*"))
+        }
+        inputs.files.each { inputFile ->
+            project.exec { cmd ->
+                cmd.workingDir = projectDir
+                cmd.executable "$buildDir/tmp/flatc/flatc.exe"
+                cmd.args "--java", "-o", outputDir, "$inputFile"
+            }
+        }
+    }
+}
+
+
+dependencies {
+    flatbuffers_compiler group: 'com.github.davidmoten', name: 'flatbuffers-compiler', version: '1.9.0.1', classifier: 'distribution-windows', ext: 'zip'
+}
