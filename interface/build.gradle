@@ -1,0 +1,73 @@
+plugins {
+    id 'java'
+}
+
+def grpcVersion = '1.12.0'
+def nettyTcNativeVersion = '2.0.7.Final'
+
+def protobufVersion = '3.5.1'
+def protocVersion = '3.5.1-1'
+
+configurations {
+    flatbuffers_compiler
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+sourceSets {
+    main {
+        java {
+            srcDir "src/generated/java"
+        }
+    }
+}
+
+dependencies {
+    compile "io.grpc:grpc-netty:${grpcVersion}"
+    compileOnly "javax.annotation:javax.annotation-api:1.2"
+
+    compile "io.grpc:grpc-stub:${grpcVersion}"
+    compile('com.google.flatbuffers:flatbuffers-java-grpc:1.8.0') {
+        exclude group: 'com.google.flatbuffers', module: 'flatbuffers-java'
+    }
+    compile 'com.github.davidmoten:flatbuffers-java:1.9.0.1'
+
+    testCompile "io.grpc:grpc-testing:${grpcVersion}"
+    testCompile "junit:junit:4.12"
+    testCompile "org.mockito:mockito-core:1.9.5"
+}
+
+
+task downloadCompiler(type: Copy) {
+    dependsOn configurations.flatbuffers_compiler
+    destinationDir = file("$buildDir/tmp/flatc")
+    from({ configurations.flatbuffers_compiler.asFileTree.collect { zipTree(it) } })
+}
+
+task createFlatBuffers() {
+    inputs.files(fileTree("src/main/fbs").include("**/*.fbs"))
+    outputs.dir("src/generated/java")
+    outputs.upToDateWhen {false}
+    group = "Generation"
+    dependsOn tasks["downloadCompiler"]
+    def outputDir = file("src/generated/java")
+
+    doLast {
+        delete { del ->
+            del.delete(fileTree(outputDir).include("**/*"))
+        }
+        inputs.files.each { inputFile ->
+            project.exec { cmd ->
+                cmd.workingDir = projectDir
+                cmd.executable "$buildDir/tmp/flatc/bin/flatc.exe"
+                cmd.args "--grpc", "--java", "-o", outputDir, "$inputFile"
+            }
+        }
+    }
+}
+
+
+dependencies {
+    flatbuffers_compiler group: 'com.github.davidmoten', name: 'flatbuffers-compiler', version: '1.9.0.1', classifier: 'distribution-windows', ext: 'zip'
+}

@@ -1,17 +1,12 @@
 package net.lessqq.amidstforge;
 
-import java.lang.reflect.Field;
-import java.util.prefs.Preferences;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
-import javax.swing.SwingUtilities;
-
-import amidst.Amidst;
-import amidst.AmidstMetaData;
-import amidst.AmidstSettings;
-import amidst.Application;
-import amidst.PerApplicationInjector;
-import amidst.ResourceLoader;
-import amidst.mojangapi.minecraftinterface.MinecraftInterface;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiOptions;
 import net.minecraft.client.gui.GuiScreen;
@@ -29,14 +24,22 @@ import net.minecraftforge.event.world.WorldEvent.Load;
 import net.minecraftforge.event.world.WorldEvent.Unload;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @EventBusSubscriber(modid = AmidstForgeMod.MOD_ID)
 public class UIEventHandler {
+    private static final Logger logger = LogManager.getLogger(AmidstForgeMod.MOD_ID);
 
     private GuiButton amidstButton;
     private GuiButton overworldButton;
-    private Application application;
     private boolean serverRunning = false;
+    private Process amidstProcess;
+    private final AmidstInterfaceImpl amidstInterface;
+
+    public UIEventHandler(AmidstInterfaceImpl amidstInterface) {
+        this.amidstInterface = amidstInterface;
+    }
 
     @SubscribeEvent
     public void initGui(InitGuiEvent.Post evt) {
@@ -62,7 +65,7 @@ public class UIEventHandler {
 
         int[] ints = provider.biomeIndexLayer.getInts(0, 0, 256, 256);
         for (int i = 0; i < ints.length; i++)
-            if ( ints[i] < 0 || ints[i] > 255)
+            if (ints[i] < 0 || ints[i] > 255)
                 return false;
         return true;
     }
@@ -88,51 +91,37 @@ public class UIEventHandler {
     @SubscribeEvent
     public void postEvent(GuiScreenEvent.ActionPerformedEvent.Post evt) {
         if (evt.getGui() instanceof GuiOptions && evt.getButton() == amidstButton) {
-            startAmidst(new IntegratedMinecraftInterface());
+            startAmidst(new IntegratedBiomeProviderAccess());
         } else if (evt.getGui() instanceof GuiOptions && evt.getButton() == overworldButton) {
-            startAmidst(new OverworldMinecraftInterface());
+            startAmidst(new OverworldBiomeProviderAccess());
         }
     }
 
-    public synchronized void startAmidst(MinecraftInterface minecraftInterface) {
-        if (application != null) {
-            Object mainWindow = getMainWindow(application);
-            if (mainWindow != null)
+    public synchronized void startAmidst(BiomeProviderAccess biomeProviderAccess) {
+        amidstInterface.setBiomeProviderAccess(biomeProviderAccess);
+        if (amidstProcess != null) {
+            if (amidstProcess.isAlive()) {
                 return;
-            application = null;
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            try {
-                PerApplicationInjector injector = new PerApplicationInjector(minecraftInterface,
-                        AmidstMetaData.from(ResourceLoader.getProperties("/amidst/metadata.properties"),
-                                ResourceLoader.getImage("/amidst/icon/amidst-16x16.png"),
-                                ResourceLoader.getImage("/amidst/icon/amidst-32x32.png"),
-                                ResourceLoader.getImage("/amidst/icon/amidst-48x48.png"),
-                                ResourceLoader.getImage("/amidst/icon/amidst-64x64.png"),
-                                ResourceLoader.getImage("/amidst/icon/amidst-128x128.png"),
-                                ResourceLoader.getImage("/amidst/icon/amidst-256x256.png")),
-                        new AmidstSettings(Preferences.userNodeForPackage(Amidst.class)));
-                application = injector.getApplication();
-                application.run();
-            } catch (Exception e) {
-                throw new RuntimeException("failed to launch AMIDST", e);
             }
-        });
-
-    }
-
-    private Object getMainWindow(Application app) {
-        Field field;
-        Object mainWindow;
-        try {
-            field = Application.class.getDeclaredField("mainWindow");
-            field.setAccessible(true);
-            mainWindow = field.get(app);
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-            throw new RuntimeException("Failed to check for Amidst instance", e);
+            amidstProcess = null;
         }
-        return mainWindow;
+
+        try {
+            Path amidstJar = extractAmidstJar();
+            ProcessBuilder pb = new ProcessBuilder();
+            pb.inheritIO();
+            pb.command(System.getProperty("java.home") + "/bin/java", "-jar", amidstJar.toAbsolutePath().toString(), "--remote", "127.0.0.1:" + AmidstForgeMod.AMIDST_REMOTE_PORT);
+            amidstProcess = pb.start();
+        } catch (IOException e) {
+            logger.error("Failed to start Amidst process", e);
+        }
     }
 
+    private Path extractAmidstJar() throws IOException {
+        Path amidstJar = File.createTempFile("amidst", ".jar").toPath();
+        try (InputStream is = AmidstForgeMod.class.getResourceAsStream("/amidst-forge_amidst.jar")) {
+            Files.copy(is, amidstJar, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return amidstJar;
+    }
 }

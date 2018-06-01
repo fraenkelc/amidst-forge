@@ -1,7 +1,7 @@
 [
 {
   "modid": "amidst-forge",
-  "name": "Amidst Bridge mod",
+  "name": "Amidst for Forge",
   "description": "Integrates modded worldgen into Amidst",
   "version": "${version}",
   "mcversion": "${mcversion}",
