@@ -15,7 +15,7 @@ public class AmidstRunCommand {
     }
 
     private int execute(CommandContext<CommandSource> ctx) {
-        eventHandler.startAmidst(new IntegratedMinecraftInterface());
+        eventHandler.startAmidst(new IntegratedBiomeProviderAccess());
         return 0;
     }
 
