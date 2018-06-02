@@ -100,12 +100,23 @@ ext.sharedManifest = manifest {
 
 configurations {
     jarIncludes
+    shade {
+        exclude group: 'io.netty', module: 'netty-codec-http2'
+        exclude group: 'io.netty', module: 'netty-handler-proxy'
+    }
+
+    all {
+        resolutionStrategy.force 'com.google.guava:guava:21.0', 'com.google.code.gson:gson:2.8.0'
+    }
+    compile {
+        extendsFrom shade
+    }
 }
 
 def embeddedJarDir = file("$buildDir/tmp/amidst-embed")
 
-task copyAmidstJar(type: org.gradle.api.tasks.Sync) {
-    group="Build"
+task copyAmidstJar(type: Sync) {
+    group = "Build"
     from(configurations.jarIncludes).rename { "amidst-forge_amidst.jar" }
     destinationDir = embeddedJarDir
 }
@@ -113,7 +124,12 @@ task copyAmidstJar(type: org.gradle.api.tasks.Sync) {
 sourceSets.main.output.dir embeddedJarDir, builtBy: tasks["copyAmidstJar"]
 
 jar {
-    //from(configurations.jarIncludes).rename { "amidst-forge_amidst.jar" }
+    dependsOn configurations.shade
+    from({
+        (configurations.shade - configurations.forgeGradleMcDeps).collect { it.isDirectory() ? it : zipTree(it) }
+    }) {
+        exclude 'META-INF/MANIFEST.MF'
+    }
     manifest {
         from sharedManifest
     }
@@ -133,7 +149,10 @@ dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
     jarIncludes project(path: ':amidst', configuration: 'shadow')
-    compile project(':interface')
+    shade(project(':interface'))
+    compileOnly group: 'io.netty', name: 'netty-codec-http2', version: '4.1.9.Final'
+    compileOnly group: 'io.netty', name: 'netty-handler-proxy', version: '4.1.9.Final'
+
 }
 
 project(':amidst') {
@@ -151,7 +170,7 @@ project(':amidst') {
 
     jar {
         manifest {
-            attributes "Main-Class": "amidst.Amidst", "Amidst-Version":  "$version"
+            attributes "Main-Class": "amidst.Amidst", "Amidst-Version": "$version"
         }
     }
     shadowJar {

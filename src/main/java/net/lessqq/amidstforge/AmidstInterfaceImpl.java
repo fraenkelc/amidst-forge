@@ -9,10 +9,13 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.provider.BiomeProvider;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 
 public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImplBase {
+    private static final Logger logger = LogManager.getLogger(AmidstForgeMod.MOD_ID);
 
     private BiomeDataAccessor biomeDataAccessor = new BiomeDataAccessor();
     private BiomeProviderAccess biomeProviderAccess = new IntegratedBiomeProviderAccess();
@@ -23,12 +26,12 @@ public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImpl
         try {
             int[] biomeData = biomeDataAccessor.getBiomeData(request.x(), request.y(), request.width(), request.height(), request.useQuarterResolution());
             int dataVector = BiomeDataReply.createDataVector(builder, biomeData);
-            BiomeDataReply.startBiomeDataReply(builder);
-            BiomeDataReply.addData(builder, dataVector);
-            BiomeDataReply.endBiomeDataReply(builder);
+            int reply = BiomeDataReply.createBiomeDataReply(builder, dataVector);
+            builder.finish(reply);
             responseObserver.onNext(BiomeDataReply.getRootAsBiomeDataReply(builder.dataBuffer()));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Failed to retrieve biome data.", e);
             responseObserver.onError(e);
         }
     }
@@ -39,18 +42,24 @@ public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImpl
             FlatBufferBuilder builder = new FlatBufferBuilder();
             ForgeRegistry<Biome> biomeRegistry = (ForgeRegistry<Biome>) ForgeRegistries.BIOMES;
             Collection<Biome> biomeList = biomeRegistry.getValues();
-            int[] biomeIds = new int[biomeList.size()];
+            int[] biomeNameOffsets = new int[biomeList.size()];
             int i = 0;
             LanguageMap map = new LanguageMap();
             for (Biome b : biomeList) {
                 int biomeName = builder.createString(map.translateKey(b.getTranslationKey()));
-                biomeIds[i++] = BiomeEntry.createBiomeEntry(builder, biomeRegistry.getID(b), biomeName);
+                biomeNameOffsets[i++] = BiomeEntry.createBiomeEntry(builder, biomeRegistry.getID(b), biomeName);
             }
-            int biomesVector = BiomeListReply.createBiomesVector(builder, biomeIds);
-            BiomeListReply.createBiomeListReply(builder, biomesVector);
+            BiomeListReply.startBiomesVector(builder, biomeNameOffsets.length);
+            for (int j = 0; j < biomeNameOffsets.length; j++) {
+                builder.addOffset(biomeNameOffsets[j]);
+            }
+            int biomesVector = builder.endVector();
+            int biomeListReply = BiomeListReply.createBiomeListReply(builder, biomesVector);
+            builder.finish(biomeListReply);
             responseObserver.onNext(BiomeListReply.getRootAsBiomeListReply(builder.dataBuffer()));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Failed to transfer biome list.", e);
             responseObserver.onError(e);
         }
     }
@@ -62,10 +71,12 @@ public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImpl
             biomeDataAccessor.setBiomeProvider(biomeProvider);
             FlatBufferBuilder builder = new FlatBufferBuilder(10);
             CreateNewWorldReply.startCreateNewWorldReply(builder);
-            CreateNewWorldReply.endCreateNewWorldReply(builder);
+            int reply = CreateNewWorldReply.endCreateNewWorldReply(builder);
+            builder.finish(reply);
             responseObserver.onNext(CreateNewWorldReply.getRootAsCreateNewWorldReply(builder.dataBuffer()));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Failed to create world.", e);
             responseObserver.onError(e);
         }
     }

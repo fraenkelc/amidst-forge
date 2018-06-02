@@ -149,7 +149,7 @@ public class UIEventHandler {
             Path amidstJar = extractAmidstJar();
             ProcessBuilder pb = new ProcessBuilder();
             pb.inheritIO();
-            pb.command(System.getProperty("java.home") + "/bin/java", "-jar", amidstJar.toAbsolutePath().toString(), "--remote", "127.0.0.1:" + AmidstForgeMod.AMIDST_REMOTE_PORT);
+            pb.command(System.getProperty("java.home") + "/bin/java", "-jar", amidstJar.toAbsolutePath().toString(), "-remote", "127.0.0.1:" + AmidstForgeMod.AMIDST_REMOTE_PORT);
             amidstProcess = pb.start();
         } catch (IOException e) {
             logger.error("Failed to start Amidst process", e);
