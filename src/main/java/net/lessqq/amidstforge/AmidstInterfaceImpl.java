@@ -2,6 +2,7 @@ package net.lessqq.amidstforge;
 
 import amidst.remote.*;
 import com.google.flatbuffers.FlatBufferBuilder;
+import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import io.grpc.stub.StreamObserver;
@@ -9,8 +10,11 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImplBase {
+    private static final Logger logger = LogManager.getLogger(AmidstForgeMod.MOD_ID);
 
     private BiomeDataAccessor biomeDataAccessor = new BiomeDataAccessor();
     private BiomeProviderAccess biomeProviderAccess = new IntegratedBiomeProviderAccess();
@@ -21,12 +25,12 @@ public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImpl
         try {
             int[] biomeData = biomeDataAccessor.getBiomeData(request.x(), request.y(), request.width(), request.height(), request.useQuarterResolution());
             int dataVector = BiomeDataReply.createDataVector(builder, biomeData);
-            BiomeDataReply.startBiomeDataReply(builder);
-            BiomeDataReply.addData(builder, dataVector);
-            BiomeDataReply.endBiomeDataReply(builder);
+            int reply = BiomeDataReply.createBiomeDataReply(builder, dataVector);
+            builder.finish(reply);
             responseObserver.onNext(BiomeDataReply.getRootAsBiomeDataReply(builder.dataBuffer()));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Failed to retrieve biome data.", e);
             responseObserver.onError(e);
         }
     }
@@ -36,15 +40,21 @@ public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImpl
         try {
             FlatBufferBuilder builder = new FlatBufferBuilder();
             TIntArrayList biomes = new TIntArrayList();
-            ForgeRegistries.BIOMES.forEach(b -> {
+            for (Biome b : ForgeRegistries.BIOMES) {
                 int biomeName = builder.createString(b.getBiomeName());
                 biomes.add(BiomeEntry.createBiomeEntry(builder, Biome.REGISTRY.getIDForObject(b), biomeName));
-            });
-            int biomesVector = BiomeListReply.createBiomesVector(builder, biomes.toArray());
-            BiomeListReply.createBiomeListReply(builder, biomesVector);
+            }
+            BiomeListReply.startBiomesVector(builder, biomes.size());
+            for (TIntIterator iterator = biomes.iterator(); iterator.hasNext(); ) {
+                builder.addOffset(iterator.next());
+            }
+            int biomesVector = builder.endVector();
+            int biomeListReply = BiomeListReply.createBiomeListReply(builder, biomesVector);
+            builder.finish(biomeListReply);
             responseObserver.onNext(BiomeListReply.getRootAsBiomeListReply(builder.dataBuffer()));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Failed to transfer biome list.", e);
             responseObserver.onError(e);
         }
     }
@@ -56,10 +66,12 @@ public class AmidstInterfaceImpl extends AmidstInterfaceGrpc.AmidstInterfaceImpl
             biomeDataAccessor.setBiomeProvider(biomeProvider);
             FlatBufferBuilder builder = new FlatBufferBuilder(10);
             CreateNewWorldReply.startCreateNewWorldReply(builder);
-            CreateNewWorldReply.endCreateNewWorldReply(builder);
+            int reply = CreateNewWorldReply.endCreateNewWorldReply(builder);
+            builder.finish(reply);
             responseObserver.onNext(CreateNewWorldReply.getRootAsCreateNewWorldReply(builder.dataBuffer()));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Failed to create world.", e);
             responseObserver.onError(e);
         }
     }

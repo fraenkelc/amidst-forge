@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-def grpcVersion = '1.12.0'
+def grpcVersion = '1.6.1'
 def nettyTcNativeVersion = '2.0.7.Final'
 
 def protobufVersion = '3.5.1'
@@ -10,6 +10,9 @@ def protocVersion = '3.5.1-1'
 
 configurations {
     flatbuffers_compiler
+    compile.resolutionStrategy.force 'io.grpc:grpc-core:1.6.1'
+
+
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -30,6 +33,8 @@ dependencies {
     compile "io.grpc:grpc-stub:${grpcVersion}"
     compile('com.google.flatbuffers:flatbuffers-java-grpc:1.8.0') {
         exclude group: 'com.google.flatbuffers', module: 'flatbuffers-java'
+        exclude group: 'io.grpc', module: 'grpc-core'
+
     }
     compile 'com.github.davidmoten:flatbuffers-java:1.9.0.1'
 
@@ -48,7 +53,7 @@ task downloadCompiler(type: Copy) {
 task createFlatBuffers() {
     inputs.files(fileTree("src/main/fbs").include("**/*.fbs"))
     outputs.dir("src/generated/java")
-    outputs.upToDateWhen {false}
+    outputs.upToDateWhen { false }
     group = "Generation"
     dependsOn tasks["downloadCompiler"]
     def outputDir = file("src/generated/java")

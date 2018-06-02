@@ -12,6 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 @Mod(modid = AmidstForgeMod.MOD_ID, name = "see mcmod.info", version = "see mcmod.info", acceptableRemoteVersions = "*", useMetadata = true)
 public class AmidstForgeMod {
@@ -58,4 +60,19 @@ public class AmidstForgeMod {
         }
     }
 
+    private void patchGRPC() {
+        // we're running grpc against an older netty version. We need to adjust for this.
+
+        try {
+            Field field = Class.forName("io.grpc.netty.AbstractNettyHandler").getDeclaredField("GRACEFUL_SHUTDOWN_NO_TIMEOUT");
+            field.setAccessible(true);
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            field.setLong(field, 1000L);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set grpc fields", e);
+        }
+
+    }
 }

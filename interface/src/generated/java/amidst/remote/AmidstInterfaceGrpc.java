@@ -82,12 +82,12 @@ public final class AmidstInterfaceGrpc {
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "amidst.remote.AmidstInterface", "GetBiomeData"))
-              .setSampledToLocalTracing(true)
+//              .setSampledToLocalTracing(true)
               .setRequestMarshaller(FlatbuffersUtils.marshaller(
                   amidst.remote.BiomeDataRequest.class, getExtractorOfBiomeDataRequest()))
               .setResponseMarshaller(FlatbuffersUtils.marshaller(
                   amidst.remote.BiomeDataReply.class, getExtractorOfBiomeDataReply()))
-                  .setSchemaDescriptor(null)
+//                  .setSchemaDescriptor(null)
                   .build();
           }
         }
@@ -143,12 +143,12 @@ public final class AmidstInterfaceGrpc {
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "amidst.remote.AmidstInterface", "GetBiomeList"))
-              .setSampledToLocalTracing(true)
+//              .setSampledToLocalTracing(true)
               .setRequestMarshaller(FlatbuffersUtils.marshaller(
                   amidst.remote.GetBiomeListRequest.class, getExtractorOfGetBiomeListRequest()))
               .setResponseMarshaller(FlatbuffersUtils.marshaller(
                   amidst.remote.BiomeListReply.class, getExtractorOfBiomeListReply()))
-                  .setSchemaDescriptor(null)
+//                  .setSchemaDescriptor(null)
                   .build();
           }
         }
@@ -204,12 +204,12 @@ public final class AmidstInterfaceGrpc {
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(
                   "amidst.remote.AmidstInterface", "CreateNewWorld"))
-              .setSampledToLocalTracing(true)
+//              .setSampledToLocalTracing(true)
               .setRequestMarshaller(FlatbuffersUtils.marshaller(
                   amidst.remote.CreateWorldRequest.class, getExtractorOfCreateWorldRequest()))
               .setResponseMarshaller(FlatbuffersUtils.marshaller(
                   amidst.remote.CreateNewWorldReply.class, getExtractorOfCreateNewWorldReply()))
-                  .setSchemaDescriptor(null)
+//                  .setSchemaDescriptor(null)
                   .build();
           }
         }
