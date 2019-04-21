@@ -100,7 +100,7 @@ public abstract class BiomeProviderBackedMinecraftInterface implements Minecraft
 
     protected void updateBiomeList() {
         Random random = new Random(12354L);
-        ForgeRegistries.BIOMES.forEach(b -> maybeAddBiome(random, b, Biome.REGISTRY.getIDForObject(b)));
+        ForgeRegistries.BIOMES.getValuesCollection().forEach(b -> maybeAddBiome(random, b, Biome.REGISTRY.getIDForObject(b)));
     }
 
     private void maybeAddBiome(Random random, Biome b, int idx) {
