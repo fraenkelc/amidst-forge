@@ -1,29 +1,29 @@
 package net.lessqq.amidstforge;
 
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import io.aeron.Aeron;
+import io.aeron.Aeron.Context;
+import io.aeron.driver.MediaDriver;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 @Mod(modid = AmidstForgeMod.MOD_ID, name = "see mcmod.info", version = "see mcmod.info", acceptableRemoteVersions = "*", useMetadata = true)
 public class AmidstForgeMod {
     public static final String MOD_ID = "amidst-forge";
-    public static final int AMIDST_REMOTE_PORT = 21548;
+    @Mod.Instance
+    public static AmidstForgeMod INSTANCE;
     private static final Logger logger = LogManager.getLogger(MOD_ID);
 
     private UIEventHandler eventHandler;
     private AmidstInterfaceImpl amidstInterface;
-    private Server server;
+    private MediaDriver driver;
+    Context context;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -42,37 +42,26 @@ public class AmidstForgeMod {
         startServer();
     }
 
+    @SuppressWarnings("resource")
     private void startServer() {
-        try {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                AmidstForgeMod.this.stopServer();
-            }));
-            server = ServerBuilder.forPort(AMIDST_REMOTE_PORT).addService(amidstInterface).build().start();
-        } catch (IOException e) {
-            logger.error("Failed to start amidst remote service", e);
-        }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            AmidstForgeMod.this.stopServer();
+        }));
+        driver = MediaDriver.launchEmbedded();
+        context = new Aeron.Context().aeronDirectoryName(driver.aeronDirectoryName());
+        context.availableImageHandler(amidstInterface::onAvailableImage);
+        final Aeron aeron = Aeron.connect(context);
+        aeron.addSubscription("aeron:ipc", Constants.REQUEST_STREAM_ID);
+        amidstInterface.setPublication(aeron.addPublication("aeron:ipc", Constants.RESPONSE_STREAM_ID));
     }
 
     private void stopServer() {
-        if (server != null) {
-            server.shutdownNow();
-            server = null;
+        if (context != null) {
+            context.close();
+        }
+        if (driver != null) {
+            driver.close();
         }
     }
 
-    private void patchGRPC() {
-        // we're running grpc against an older netty version. We need to adjust for this.
-
-        try {
-            Field field = Class.forName("io.grpc.netty.AbstractNettyHandler").getDeclaredField("GRACEFUL_SHUTDOWN_NO_TIMEOUT");
-            field.setAccessible(true);
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-            field.setLong(field, 1000L);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set grpc fields", e);
-        }
-
-    }
 }

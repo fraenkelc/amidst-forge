@@ -106,6 +106,8 @@ repositories {
 dependencies {
     jarIncludes project(path: ':amidst', configuration: 'shadow')
     shade(project(':interface'))
+    shade group: 'io.aeron', name: 'aeron-client', version: '1.21.1'
+    shade group: 'io.aeron', name: 'aeron-driver', version: '1.21.1'
     compileOnly group: 'io.netty', name: 'netty-codec-http2', version: '4.1.9.Final'
     compileOnly group: 'io.netty', name: 'netty-handler-proxy', version: '4.1.9.Final'
 
@@ -165,6 +167,7 @@ project(':amidst') {
         compile 'args4j:args4j:2.32'
         compile files('lib/JNBT_1.3.jar')
         compile project(':interface')
+	    compile group: 'io.aeron', name: 'aeron-client', version: '1.21.1'
         testCompile 'junit:junit:4.11'
     }
     compileJava {

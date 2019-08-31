@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbe:messageSchema
+	xmlns:sbe="http://fixprotocol.io/2016/sbe"
+	xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://fixprotocol.io/2016/sbe http://fixprotocol.io/2016/sbe/sbe.xsd"
+	package="amidst.remote.sbe" id="1" version="0" semanticVersion="5.2"
+	description="Amidst remote interface" byteOrder="littleEndian">
+	<types>
+		<composite name="messageHeader"
+			description="Message identifiers and length of message root.">
+			<type name="blockLength" primitiveType="uint16" />
+			<type name="templateId" primitiveType="uint16" />
+			<type name="schemaId" primitiveType="uint16" />
+			<type name="version" primitiveType="uint16" />
+		</composite>
+		<composite name="groupSizeEncoding"
+			description="Repeating group dimensions.">
+			<type name="blockLength" primitiveType="uint16" />
+			<type name="numInGroup" primitiveType="uint16" />
+		</composite>
+		<enum name="BooleanType" encodingType="uint8"
+			description="Boolean Type.">
+			<validValue name="F"
+				description="False value representation.">0</validValue>
+			<validValue name="T"
+				description="True value representation.">1</validValue>
+		</enum>
+		<composite name="biomeDataBlock">
+			<type name="length" primitiveType="uint16" />
+			<type name="data" primitiveType="int32" length="512" />
+		</composite>
+		<composite name="varStringEncoding"
+			description="Variable length UTF-8 String.">
+			<type name="length" primitiveType="uint32" maxValue="1073741824" />
+			<type name="varData" primitiveType="uint8" length="0"
+				characterEncoding="UTF-8" />
+		</composite>
+	</types>
+
+	<sbe:message name="BiomeDataRequest" id="1">
+		<field name="x" id="1" type="int32" />
+		<field name="y" id="2" type="int32" />
+		<field name="width" id="3" type="int32" />
+		<field name="height" id="4" type="int32" />
+		<field name="useQuarterResolution" id="5" type="BooleanType" />
+	</sbe:message>
+
+	<sbe:message name="BiomeDataResponse" id="4">
+		<field name="length" id="1" type="int32" />
+		<group name="biomeData" id="2">
+			<field name="data" id="1" type="biomeDataBlock" />
+		</group>
+	</sbe:message>
+
+	<sbe:message name="CreateWorldRequest" id="2">
+		<field name="seed" id="1" type="int64" />
+		<data name="worldType" id="2" type="varStringEncoding" />
+		<data name="generatorOptions" id="3" type="varStringEncoding" />
+	</sbe:message>
+
+	<sbe:message name="BiomeListRequest" id="3" />
+
+	<sbe:message name="BiomeListResponse" id="5">
+		<group name="biomeEntry" id="1">
+			<field name="biomeId" id="1" type="int32" />
+			<data name="biomeName" id="2" type="varStringEncoding" />
+		</group>
+	</sbe:message>
+
+</sbe:messageSchema>
