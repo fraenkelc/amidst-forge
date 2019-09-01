@@ -5,6 +5,8 @@ import org.apache.logging.log4j.Logger;
 
 import io.aeron.Aeron;
 import io.aeron.Aeron.Context;
+import io.aeron.ConcurrentPublication;
+import io.aeron.Subscription;
 import io.aeron.driver.MediaDriver;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -24,6 +26,8 @@ public class AmidstForgeMod {
     private AmidstInterfaceImpl amidstInterface;
     private MediaDriver driver;
     Context context;
+    private Subscription subscription;
+    private ConcurrentPublication publication;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -51,11 +55,19 @@ public class AmidstForgeMod {
         context = new Aeron.Context().aeronDirectoryName(driver.aeronDirectoryName());
         context.availableImageHandler(amidstInterface::onAvailableImage);
         final Aeron aeron = Aeron.connect(context);
-        aeron.addSubscription("aeron:ipc", Constants.REQUEST_STREAM_ID);
-        amidstInterface.setPublication(aeron.addPublication("aeron:ipc", Constants.RESPONSE_STREAM_ID));
+        subscription = aeron.addSubscription("aeron:ipc", Constants.REQUEST_STREAM_ID);
+        publication = aeron.addPublication("aeron:ipc", Constants.RESPONSE_STREAM_ID);
+        amidstInterface.setPublication(publication);
+        logger.info("Use the URL \"{}\" to connect with amidst.", driver.aeronDirectoryName());
     }
 
     private void stopServer() {
+        if (subscription != null) {
+            subscription.close();
+        }
+        if (publication != null) {
+            publication.close();
+        }
         if (context != null) {
             context.close();
         }

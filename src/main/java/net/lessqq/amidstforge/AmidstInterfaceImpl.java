@@ -21,8 +21,8 @@ import amidst.remote.sbe.BooleanType;
 import amidst.remote.sbe.CreateWorldRequestDecoder;
 import amidst.remote.sbe.MessageHeaderDecoder;
 import amidst.remote.sbe.MessageHeaderEncoder;
-import io.aeron.FragmentAssembler;
 import io.aeron.Image;
+import io.aeron.ImageFragmentAssembler;
 import io.aeron.Publication;
 import io.aeron.logbuffer.BufferClaim;
 import io.aeron.logbuffer.FragmentHandler;
@@ -53,8 +53,8 @@ public class AmidstInterfaceImpl {
     private Publication publication;
 
     public void onAvailableImage(Image image) {
-        FragmentHandler reassemblingFragmentHandler = new FragmentAssembler(this::onFragment);
-        image.poll(reassemblingFragmentHandler, 100);
+        FragmentHandler reassemblingFragmentHandler = new ImageFragmentAssembler(this::onFragment);
+        image.poll(reassemblingFragmentHandler, 1);
     }
 
     private void onFragment(DirectBuffer buffer, int offset, int length, Header header) {
