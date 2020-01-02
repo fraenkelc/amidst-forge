@@ -1,46 +1,97 @@
 buildscript {
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
     }
 }
 plugins {
     id 'com.palantir.git-version' version '0.5.3'
 }
-apply plugin: 'net.minecraftforge.gradle.forge'
-//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+apply plugin: 'net.minecraftforge.gradle'
+// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
 
-version gitVersion()
 group = "net.lessqq.minecraft.amidstbridge" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "amidst-forge"
 
-sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 ext {
-    mc_version = '1.12.2'
-    forge_version = '14.23.2.2611'
+    mc_version = '1.14.4'
+    forge_version = '28.1.0'
 }
 
 version = project.mc_version + '-' + gitVersion()
 
 minecraft {
-    version = project.mc_version + '-' + project.forge_version
-
-    runDir = "run"
-    
-    // the mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   snapshot are built nightly.
-    // stable_#            stables are built at the discretion of the MCP team.
+    // The mappings can be changed at any time, and must be in the following format.
+    // snapshot_YYYYMMDD   Snapshot are built nightly.
+    // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
-    // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = "snapshot_20171003"
+    // Simply re-run your setup task after changing the mappings to update your workspace.
+    mappings channel: 'snapshot', version: '20190719-1.14.3'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    
+    accessTransformer = file('src/main/resources/META-INF/amidst-forge_at.cfg')
+
+    // Default run configurations.
+    // These can be tweaked, removed, or duplicated as needed.
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            // Recommended logging data for a userdev environment
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            // Recommended logging level for the console
+            property 'forge.logging.console.level', 'debug'
+
+            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/')
+
+            mods {
+                examplemod {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
 }
 
 ext.sharedManifest = manifest {
@@ -68,40 +119,10 @@ jar {
     }
 }
 
-/* // enable this to test with Integrated Dynamics
-repositories {
-    maven {
-        name "Cyclops Repo"
-        url "https://oss.jfrog.org/artifactory/simple/libs-release/"
-    }
-}
-*/
-
 dependencies {
+    minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
+
     embed project(path: ':amidst', configuration: 'shadow')
-    // enable these to test with Integrated Dynamics
-    //compile "org.cyclops.integrateddynamics:IntegratedDynamics:1.12.2-0.11.0-1079:deobf"
-    //compile "org.cyclops.commoncapabilities:CommonCapabilities:1.12.2-1.4.0-185:deobf"
-}
-
-processResources {
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
-	rename '(.+_at.cfg)', 'META-INF/$1'
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
-    }
-        
-    // copy everything else except the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
 }
 
 project(':amidst') {
@@ -134,4 +155,26 @@ project(':amidst') {
 	def props = new Properties()
 	file('src/main/resources/amidst/metadata.properties').withInputStream { props.load(it) }
 	version = "${props['amidst.version.major']}.${props['amidst.version.minor']}${props['amidst.version.preReleaseSuffix']?.trim() ? "-" + props['amidst.version.preReleaseSuffix']?.trim() : ''}"
+}
+
+// Example configuration to allow publishing using the maven-publish task
+// we define a custom artifact that is sourced from the reobfJar output task
+// and then declare that to be published
+// Note you'll need to add a repository here
+def reobfFile = file("$buildDir/reobfJar/output.jar")
+def reobfArtifact = artifacts.add('default', reobfFile) {
+    type 'jar'
+    builtBy 'reobfJar'
+}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact reobfArtifact
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/mcmodsrepo"
+        }
+    }
 }
