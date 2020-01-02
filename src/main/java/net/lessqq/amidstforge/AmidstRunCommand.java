@@ -1,31 +1,22 @@
 package net.lessqq.amidstforge;
 
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.server.MinecraftServer;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.context.CommandContext;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
 
-public class AmidstRunCommand extends CommandBase {
+public class AmidstRunCommand {
 
-  private UIEventHandler eventHandler;
+    private UIEventHandler eventHandler;
 
-  public AmidstRunCommand(UIEventHandler eventHandler) {
-    this.eventHandler = eventHandler;
-  }
+    public AmidstRunCommand(UIEventHandler eventHandler, CommandDispatcher<CommandSource> dispatcher) {
+        this.eventHandler = eventHandler;
+        dispatcher.register(Commands.literal("amidst").executes(this::execute));
+    }
 
-  @Override
-  public String getName() {
-    return "amidst";
-  }
-
-  @Override
-  public String getUsage(ICommandSender sender) {
-    return "amidstforge.command.amidst.usage";
-  }
-
-  @Override
-  public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-    eventHandler.startAmidst(new IntegratedMinecraftInterface());
-  }
+    private int execute(CommandContext<CommandSource> ctx) {
+        eventHandler.startAmidst(new IntegratedMinecraftInterface());
+        return 0;
+    }
 
 }

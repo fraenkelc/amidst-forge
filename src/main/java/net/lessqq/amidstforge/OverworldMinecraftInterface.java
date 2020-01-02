@@ -3,21 +3,26 @@ package net.lessqq.amidstforge;
 import amidst.mojangapi.minecraftinterface.MinecraftInterfaceException;
 import amidst.mojangapi.world.WorldType;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerWorld;
 
 public class OverworldMinecraftInterface extends BiomeProviderBackedMinecraftInterface {
+
+    private final MinecraftServer server;
+
+    public OverworldMinecraftInterface(MinecraftServer server) {
+
+        this.server = server;
+    }
 
     @Override
     public void createWorld(long seed, WorldType worldType, String generatorOptions)
             throws MinecraftInterfaceException {
-        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         if (server != null) {
             updateBiomeList();
-            WorldServer world = server.getWorld(0);
-            if (world != null) {
-                setBiomeProvider(world.getBiomeProvider());
-            }
+
+            ServerWorld world = server.getWorld(DimensionType.OVERWORLD);
+            setBiomeProvider(world.getChunkProvider().getChunkGenerator().getBiomeProvider());
         }
     }
 
