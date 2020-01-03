@@ -2,17 +2,12 @@ plugins {
     id 'java'
 }
 
-def grpcVersion = '1.6.1'
-def nettyTcNativeVersion = '2.0.7.Final'
-
-def protobufVersion = '3.5.1'
-def protocVersion = '3.5.1-1'
+def grpcVersion = '1.26.0'
+def flatbuffers_version = '1.11.0'
 
 configurations {
     flatbuffers_compiler
-    compile.resolutionStrategy.force 'io.grpc:grpc-core:1.6.1'
-
-
+    compile.resolutionStrategy.force "io.grpc:grpc-core:$grpcVersion"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -31,27 +26,32 @@ repositories {
 }
 
 dependencies {
-    compile "io.grpc:grpc-netty:${grpcVersion}"
+    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
     compileOnly "javax.annotation:javax.annotation-api:1.2"
 
     compile "io.grpc:grpc-stub:${grpcVersion}"
-    compile('com.google.flatbuffers:flatbuffers-java-grpc:1.8.0') {
-        exclude group: 'com.google.flatbuffers', module: 'flatbuffers-java'
-        exclude group: 'io.grpc', module: 'grpc-core'
-
-    }
-    compile 'com.github.davidmoten:flatbuffers-java:1.9.0.1'
+    compile "com.google.flatbuffers:flatbuffers-java-grpc:$flatbuffers_version"
+    compile "com.google.flatbuffers:flatbuffers-java:$flatbuffers_version"
 
     testCompile "io.grpc:grpc-testing:${grpcVersion}"
     testCompile "junit:junit:4.12"
     testCompile "org.mockito:mockito-core:1.9.5"
 }
 
+//
+def compilerFile = file("$buildDir/flatc_windows_exe.zip")
 
-task downloadCompiler(type: Copy) {
-    dependsOn configurations.flatbuffers_compiler
+task downloadCompiler {
+    outputs.files compilerFile
+    doLast {
+        compilerFile << new URL("https://github.com/google/flatbuffers/releases/download/v1.11.0/flatc_windows_exe.zip").getBytes()
+    }
+}
+
+task unpackCompiler(type: Copy) {
+    dependsOn downloadCompiler
     destinationDir = file("$buildDir/tmp/flatc")
-    from({ configurations.flatbuffers_compiler.asFileTree.collect { zipTree(it) } })
+    from({ zipTree(compilerFile) })
 }
 
 task createFlatBuffers() {
@@ -59,7 +59,7 @@ task createFlatBuffers() {
     outputs.dir("src/generated/java")
     outputs.upToDateWhen { false }
     group = "Generation"
-    dependsOn tasks["downloadCompiler"]
+    dependsOn tasks["unpackCompiler"]
     def outputDir = file("src/generated/java")
 
     doLast {
@@ -69,7 +69,7 @@ task createFlatBuffers() {
         inputs.files.each { inputFile ->
             project.exec { cmd ->
                 cmd.workingDir = projectDir
-                cmd.executable "$buildDir/tmp/flatc/bin/flatc.exe"
+                cmd.executable "$buildDir/tmp/flatc/flatc.exe"
                 cmd.args "--grpc", "--java", "-o", outputDir, "$inputFile"
             }
         }

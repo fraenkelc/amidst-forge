@@ -150,8 +150,6 @@ dependencies {
 
     jarIncludes project(path: ':amidst', configuration: 'shadow')
     shade(project(':interface'))
-    compileOnly group: 'io.netty', name: 'netty-codec-http2', version: '4.1.9.Final'
-    compileOnly group: 'io.netty', name: 'netty-handler-proxy', version: '4.1.9.Final'
 
 }
 
