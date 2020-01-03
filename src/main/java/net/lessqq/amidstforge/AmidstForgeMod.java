@@ -4,10 +4,9 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
+import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -16,8 +15,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+
 @Mod(AmidstForgeMod.MOD_ID)
-@Mod.EventBusSubscriber
 public class AmidstForgeMod {
     public static final String MOD_ID = "amidst-forge";
     public static final int AMIDST_REMOTE_PORT = 21548;
@@ -30,31 +29,28 @@ public class AmidstForgeMod {
     public AmidstForgeMod() {
         final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::preInit);
+        modEventBus.addListener(this::postInit);
 
     }
 
-    @SubscribeEvent
     public void preInit(FMLClientSetupEvent event) {
         amidstInterface = new AmidstInterfaceImpl();
         eventHandler = new UIEventHandler(amidstInterface);
         MinecraftForge.EVENT_BUS.register(eventHandler);
+        MinecraftForge.EVENT_BUS.addListener(this::serverStarting);
     }
 
-    @SubscribeEvent
     public void serverStarting(FMLServerStartingEvent evt) {
         new AmidstRunCommand(eventHandler, evt.getCommandDispatcher());
     }
 
-    @SubscribeEvent
-    public void postInit(FMLLoadCompleteEvent event) {
+    public void postInit(InterModProcessEvent event) {
         startServer();
     }
 
     private void startServer() {
         try {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                AmidstForgeMod.this.stopServer();
-            }));
+            Runtime.getRuntime().addShutdownHook(new Thread(AmidstForgeMod.this::stopServer));
             server = ServerBuilder.forPort(AMIDST_REMOTE_PORT).addService(amidstInterface).build().start();
         } catch (IOException e) {
             logger.error("Failed to start amidst remote service", e);
