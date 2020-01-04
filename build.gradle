@@ -149,8 +149,9 @@ dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
     jarIncludes project(path: ':amidst', configuration: 'shadow')
-    shade(project(':interface'))
+    shade project(':interface')
 
+    testImplementation 'org.hdrhistogram:HdrHistogram:2.1.12'
 }
 
 project(':amidst') {

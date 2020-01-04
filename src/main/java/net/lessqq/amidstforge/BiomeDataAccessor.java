@@ -6,6 +6,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 public class BiomeDataAccessor {
     private ForgeRegistry<Biome> biomeRegistry = (ForgeRegistry<Biome>) ForgeRegistries.BIOMES;
     private BiomeProvider biomeProvider;
@@ -18,11 +19,11 @@ public class BiomeDataAccessor {
         return biomeData;
     }
 
-    private void checkForInvalidData(int[] biomeData)  {
+    private void checkForInvalidData(int[] biomeData) {
         for (int biomeDatum : biomeData)
             if (biomeDatum < 0 || biomeDatum > 255) {
                 RuntimeException exception = new RuntimeException("BiomeProvider returned invalid Biome ID: '" + biomeDatum
-                    + "'. Your mod combination might not be supported.");
+                        + "'. Your mod combination might not be supported.");
                 exception.fillInStackTrace();
                 logger.error("Biome data check failed.", exception);
                 throw exception;
@@ -38,16 +39,21 @@ public class BiomeDataAccessor {
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 int idx = i + j * width;
-                Biome b;
-        if (useQuarterResolution)
-                    b = biomeProvider.func_222366_b(x + i, y + j);
-        else
-                    b = biomeProvider.getBiome(x + i, y + j);
-                data[idx] = biomeRegistry.getID(b);
-    }
+                int biomeId = getBiomeId(useQuarterResolution, x + i, y + j);
+                data[idx] = biomeId;
+            }
         }
         return data;
-        }
+    }
+
+    private int getBiomeId(boolean useQuarterResolution, int rx, int ry) {
+        Biome b;
+        if (useQuarterResolution)
+            b = biomeProvider.func_222366_b(rx, ry);
+        else
+            b = biomeProvider.getBiome(rx, ry);
+        return biomeRegistry.getID(b);
+    }
 
     public BiomeProvider getBiomeProvider() {
         return biomeProvider;
@@ -56,6 +62,7 @@ public class BiomeDataAccessor {
     public void setBiomeProvider(BiomeProvider biomeProvider) {
         this.biomeProvider = biomeProvider;
     }
+
     private int[] ensureArrayCapacity(int length) {
         int cur = dataArray.length;
         if (length <= cur)
