@@ -1,9 +1,13 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow'
 }
 
 def grpcVersion = '1.26.0'
 def flatbuffers_version = '1.11.0'
+
+version = rootProject.version
+group = rootProject.group
 
 configurations {
     flatbuffers_compiler
@@ -26,16 +30,16 @@ repositories {
 }
 
 dependencies {
-    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
     compileOnly "javax.annotation:javax.annotation-api:1.2"
 
-    compile "io.grpc:grpc-stub:${grpcVersion}"
-    compile "com.google.flatbuffers:flatbuffers-java-grpc:$flatbuffers_version"
-    compile "com.google.flatbuffers:flatbuffers-java:$flatbuffers_version"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "com.google.flatbuffers:flatbuffers-java-grpc:$flatbuffers_version"
+    implementation "com.google.flatbuffers:flatbuffers-java:$flatbuffers_version"
 
-    testCompile "io.grpc:grpc-testing:${grpcVersion}"
-    testCompile "junit:junit:4.12"
-    testCompile "org.mockito:mockito-core:1.9.5"
+    testImplementation "io.grpc:grpc-testing:${grpcVersion}"
+    testImplementation "junit:junit:4.12"
+    testImplementation "org.mockito:mockito-core:1.9.5"
 }
 
 //

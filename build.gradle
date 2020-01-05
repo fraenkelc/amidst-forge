@@ -94,12 +94,9 @@ minecraft {
     }
 }
 
-ext.sharedManifest = manifest {
-    attributes('Implementation-Version': project.version)
-}
-
 configurations {
     jarIncludes
+    containedDeps
     shade {
         exclude group: 'io.netty', module: 'netty-codec-http2'
         exclude group: 'io.netty', module: 'netty-handler-proxy'
@@ -109,7 +106,7 @@ configurations {
         resolutionStrategy.force 'com.google.guava:guava:21.0', 'com.google.code.gson:gson:2.8.0'
     }
     compile {
-        extendsFrom shade
+        extendsFrom shade, containedDeps
     }
 }
 
@@ -123,6 +120,26 @@ task copyAmidstJar(type: Sync) {
 
 sourceSets.main.output.dir embeddedJarDir, builtBy: tasks["copyAmidstJar"]
 
+task containedDepsMeta {
+    dependsOn configurations.containedDeps
+    def outputDir = file("$buildDir/generated/meta")
+    outputs.dir outputDir
+    doLast {
+        configurations.containedDeps.resolvedConfiguration.resolvedArtifacts.each { ar ->
+            def mvi = ar.getModuleVersion().getId()
+            def meta = file("$outputDir/${ar.file.name}.meta")
+            def mavenCoords = "${mvi.group}:${mvi.name}:${mvi.version}"
+            if (ar.classifier)
+                mavenCoords += ":${ar.classifier}"
+            if (ar.extension && ar.extension != "jar")
+                mavenCoords += "@${ar.extension}"
+            manifest {
+                attributes["Maven-Artifact"] = mavenCoords
+            }.writeTo(meta)
+        }
+    }
+}
+
 jar {
     dependsOn configurations.shade
     from({
@@ -130,15 +147,18 @@ jar {
     }) {
         exclude 'META-INF/MANIFEST.MF'
     }
-    manifest {
-        from sharedManifest
+    from(configurations.containedDeps) {
+        into "META-INF/libraries"
+    }
+    from(tasks.containedDepsMeta) {
+        into "META-INF/libraries"
     }
     doFirst {
         manifest {
             attributes(
                     'Implementation-Version': project.version,
-                    'FMLAT': sourceSets.main.resources.files.collect { it.getName() }.findAll {
-                        it.endsWith("_at.cfg")
+                    'ContainedDeps': configurations.containedDeps.files.collect {
+                        it.name
                     }.join(" ")
             )
         }
@@ -149,7 +169,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
     jarIncludes project(path: ':amidst', configuration: 'shadow')
-    shade project(':interface')
+    containedDeps project(path: ':interface', configuration: 'shadow')
 
     testImplementation 'org.hdrhistogram:HdrHistogram:2.1.12'
 }
@@ -177,6 +197,9 @@ project(':amidst') {
         relocate 'com.google.gson', 'amidst.shadow.com.google.gson'
         relocate 'org.kohsuke.args4j', 'amidst.shadow.org.kohsuke.args4j'
         relocate 'net.miginfocom', 'amidst.shadow.net.miginfocom'
+        dependencies {
+            exclude project(path: ":interface", configuration: 'shadow')
+        }
     }
 
     dependencies {
@@ -184,7 +207,7 @@ project(':amidst') {
         compile 'com.miglayout:miglayout-swing:4.2'
         compile 'args4j:args4j:2.32'
         compile files('lib/JNBT_1.3.jar')
-        compile project(':interface')
+        compile project(path: ":interface", configuration: 'shadow')
         testCompile 'junit:junit:4.11'
     }
     compileJava {
