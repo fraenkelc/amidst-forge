@@ -163,6 +163,7 @@ project(':amidst') {
 
     repositories {
         jcenter()
+        maven { url file("m2")}
     }
 
     def props = new Properties()
@@ -185,7 +186,7 @@ project(':amidst') {
         compile 'com.google.code.gson:gson:2.5'
         compile 'com.miglayout:miglayout-swing:4.2'
         compile 'args4j:args4j:2.32'
-        compile files('lib/JNBT_1.3.jar')
+        compile 'jnbt:jnbt:1.3'
         compile project(':interface')
         testCompile 'junit:junit:4.11'
     }
