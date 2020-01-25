@@ -1,0 +1,52 @@
+namespace amidst.remote;
+
+union RequestTypes { BiomeDataRequest, GetBiomeListRequest, CreateWorldRequest }
+table Request {
+    data: RequestTypes;
+}
+
+union ResponseTypes {BiomeDataReply, BiomeListReply, CreateNewWorldReply}
+table Response {
+    data: ResponseTypes;
+}
+
+table BiomeEntry {
+    biomeId:int;
+    biomeName:string;
+}
+
+table BiomeListReply {
+    biomes:[BiomeEntry];
+}
+
+table BiomeDataReply {
+    data:[int];
+}
+
+table BiomeDataRequest {
+    x:int;
+    y:int;
+    width:int;
+    height:int;
+    useQuarterResolution:bool;
+}
+
+table CreateWorldRequest {
+    seed:long;
+    worldType:string;
+    generatorOptions:string;
+}
+
+table GetBiomeListRequest {
+
+}
+
+table CreateNewWorldReply {
+
+}
+
+rpc_service AmidstInterface {
+  GetBiomeData(BiomeDataRequest):BiomeDataReply;
+  GetBiomeList(GetBiomeListRequest):BiomeListReply;
+  CreateNewWorld(CreateWorldRequest):CreateNewWorldReply;
+}

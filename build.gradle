@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
     }
 }
 plugins {
@@ -36,7 +36,7 @@ minecraft {
     // Simply re-run your setup task after changing the mappings to update your workspace.
     mappings channel: 'snapshot', version: '20190719-1.14.3'
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
-    
+
     //accessTransformer = file('src/main/resources/META-INF/amidst-forge_at.cfg')
 
     // Default run configurations.
@@ -99,22 +99,50 @@ ext.sharedManifest = manifest {
 }
 
 configurations {
-    embed
-    compile.extendsFrom embed
+    jarIncludes
+    shade {
+        exclude group: 'io.netty', module: 'netty-codec-http2'
+        exclude group: 'io.netty', module: 'netty-handler-proxy'
+    }
+
+    all {
+        resolutionStrategy.force 'com.google.guava:guava:21.0', 'com.google.code.gson:gson:2.8.0'
+    }
+    compile {
+        extendsFrom shade
+    }
 }
 
+def embeddedJarDir = file("$buildDir/tmp/amidst-embed")
+
+task copyAmidstJar(type: Sync) {
+    group = "Build"
+    from(configurations.jarIncludes).rename { "amidst-forge_amidst.jar" }
+    destinationDir = embeddedJarDir
+}
+
+sourceSets.main.output.dir embeddedJarDir, builtBy: tasks["copyAmidstJar"]
+
 jar {
-    from(configurations.embed)
+    dependsOn configurations.shade
+    from({
+        (configurations.shade - configurations.minecraft).collect { it.isDirectory() ? it : zipTree(it) }
+    }) {
+        exclude 'META-INF/MANIFEST.MF'
+        exclude 'META-INF/versions/**/*'
+        exclude '**/module-info.class'
+    }
     manifest {
         from sharedManifest
     }
     doFirst {
         manifest {
-			attributes(
-			  'Implementation-Version': project.version,
-			  'ContainedDeps': configurations.embed.files.collect { it.getName() }.join(" "),
-			  'FMLAT': sourceSets.main.resources.files.collect{it.getName()}.findAll{it.endsWith("_at.cfg")}.join(" ")
-			  )
+            attributes(
+                    'Implementation-Version': project.version,
+                    'FMLAT': sourceSets.main.resources.files.collect { it.getName() }.findAll {
+                        it.endsWith("_at.cfg")
+                    }.join(" ")
+            )
         }
     }
 }
@@ -122,39 +150,50 @@ jar {
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
 
-    embed project(path: ':amidst', configuration: 'shadow')
+    jarIncludes project(path: ':amidst', configuration: 'shadow')
+    shade project(':interface')
+
+    testImplementation 'org.hdrhistogram:HdrHistogram:2.1.12'
 }
 
 project(':amidst') {
-	apply plugin: 'java'
-	apply plugin: 'eclipse'
-	apply plugin: 'com.github.johnrengelman.shadow'
-	
-	repositories {
-		jcenter()
-	}
-	
-	shadowJar {
-		relocate 'org.jnbt', 'amidst.shadow.org.jnbt'
-		relocate 'com.google.gson', 'amidst.shadow.com.google.gson'
-		relocate 'org.kohsuke.args4j', 'amidst.shadow.org.kohsuke.args4j'
-		relocate 'net.miginfocom', 'amidst.shadow.net.miginfocom'
-	}
-	
-	dependencies {
-		compile 'com.google.code.gson:gson:2.5'
-		compile 'com.miglayout:miglayout-swing:4.2'
-		compile 'args4j:args4j:2.32'
-		compile files('lib/JNBT_1.3.jar')
-		testCompile 'junit:junit:4.11'
-	}
-	compileJava {
-		sourceCompatibility = targetCompatibility = '1.8'
-	}
-	
-	def props = new Properties()
-	file('src/main/resources/amidst/metadata.properties').withInputStream { props.load(it) }
-	version = "${props['amidst.version.major']}.${props['amidst.version.minor']}${props['amidst.version.preReleaseSuffix']?.trim() ? "-" + props['amidst.version.preReleaseSuffix']?.trim() : ''}"
+    apply plugin: 'java'
+    apply plugin: 'eclipse'
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    repositories {
+        jcenter()
+        maven { url file("m2")}
+    }
+
+    def props = new Properties()
+    file('src/main/resources/amidst/metadata.properties').withInputStream { props.load(it) }
+    version = "${props['amidst.version.major']}.${props['amidst.version.minor']}${props['amidst.version.preReleaseSuffix']?.trim() ? "-" + props['amidst.version.preReleaseSuffix']?.trim() : ''}"
+
+    jar {
+        manifest {
+            attributes "Main-Class": "amidst.Amidst", "Amidst-Version": "$version"
+        }
+    }
+    shadowJar {
+        relocate 'org.jnbt', 'amidst.shadow.org.jnbt'
+        relocate 'com.google.gson', 'amidst.shadow.com.google.gson'
+        relocate 'org.kohsuke.args4j', 'amidst.shadow.org.kohsuke.args4j'
+        relocate 'net.miginfocom', 'amidst.shadow.net.miginfocom'
+    }
+
+    dependencies {
+        compile 'com.google.code.gson:gson:2.5'
+        compile 'com.miglayout:miglayout-swing:4.2'
+        compile 'args4j:args4j:2.32'
+        compile 'jnbt:jnbt:1.3'
+        compile project(':interface')
+        testCompile 'junit:junit:4.11'
+    }
+    compileJava {
+        sourceCompatibility = targetCompatibility = '1.8'
+    }
+
 }
 
 // Example configuration to allow publishing using the maven-publish task

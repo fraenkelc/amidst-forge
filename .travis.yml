@@ -1,8 +1,8 @@
 language: java
 jdk:
 - openjdk8
-install: "./gradlew setupCIWorkspace -s"
-script: "./gradlew build -s"
+install: "./gradlew dependencies -s"
+script: "./gradlew build publish -s"
 before_cache:
 - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
 - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -14,7 +14,7 @@ deploy:
   provider: releases
   api_key:
     secure: Rh0wWBdA0+GOW7ivKtWcNcfnBXu+GXgv4FwuI4ubRwRrGmKNXMj+dZDSFghbR/O0E5/d1xIi5e+um6MVz8q/lpq+vVTalX4yIrtqG5cIGdCcKWxxn6eIbQuHHlpjoGThBMHYY9tlEXjYWy8sIGcmR+SKDCHFKjDT6wsU/Lz5++97x2Pf4FyoBrW2GLi0CfpyvwnCjlRpTyhCILFidbCEN9gdgHqJzvIQXLQbgtmVgabNJ1niQCdK4O+WOKhSjy+YYuyuNTpDIyogLq6XIgRberrZ2CfYN1CMQcxQlUiG1v7dhdieJlth9zCIh3g3qrSsFMYAuuZI2j48+zge7yYOJ02C0K84/pLp7H6A+QS/mefKX0f8V7Wrd/phJ2VHRyyp3VSX4NBhuwuEqbv7FkzwEKE81ih9+a+b+nzNxPACuB+/NrHNH4d2M6pDnpM414v8SH/2WCoOz1laoGeyCHpAodrjVB3tJ6IoEcm2lB8NSkY1DmDIheRw22XVk9kRNw9DxggUQUVAesp76Tg/2XomkxkLcgEx14w5Lni0pQgzYPsrLkqHChVv2HDHRAiQFqMhgKotzEVydMWu2dgWQXDX/YfUz1Qr/iO6or1j46UTyhiT2yDwfSRR89yJdXDz7FYSElWMoA7c382O/mrFLlkNN/wOSZNGK8ceUI5JRnU8RsI=
-  file: build/libs/amidst-forge-*.jar
+  file: mcmodsrepo/net/lessqq/minecraft/amidstbridge/amidst-forge/*/amidst-forge-*.jar
   file_glob: true
   skip_cleanup: true
   on:
