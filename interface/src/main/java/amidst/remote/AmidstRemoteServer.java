@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -18,10 +19,10 @@ public class AmidstRemoteServer implements AutoCloseable {
     private final AmidstInterface amidstInterface;
     private AcceptingChannel<StreamConnection> server;
 
-    public AmidstRemoteServer(int port, AmidstInterface amidstInterface) {
+    public AmidstRemoteServer(int port, AmidstInterface amidstInterface, URLClassLoader classLoader) {
         this.amidstInterface = amidstInterface;
         try {
-            Xnio xnio = Xnio.getInstance();
+            Xnio xnio = Xnio.getInstance(classLoader);
             server = xnio.createWorkerBuilder().build().createStreamConnectionServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), port), this::handleConnection, OptionMap.EMPTY);
             server.resumeAccepts();
         } catch (IOException e) {

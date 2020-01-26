@@ -9,6 +9,7 @@ buildscript {
         classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
     }
 }
+
 plugins {
     id 'com.palantir.git-version' version '0.5.3'
 }
@@ -16,6 +17,7 @@ apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 group = "net.lessqq.minecraft.amidstbridge" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "amidst-forge"
@@ -100,38 +102,21 @@ ext.sharedManifest = manifest {
 
 configurations {
     jarIncludes
-    shade {
-        exclude group: 'io.netty', module: 'netty-codec-http2'
-        exclude group: 'io.netty', module: 'netty-handler-proxy'
-    }
-
-    all {
-        resolutionStrategy.force 'com.google.guava:guava:21.0', 'com.google.code.gson:gson:2.8.0'
-    }
-    compile {
-        extendsFrom shade
-    }
+    shade
+    compile { extendsFrom shade }
 }
 
 def embeddedJarDir = file("$buildDir/tmp/amidst-embed")
 
 task copyAmidstJar(type: Sync) {
     group = "Build"
-    from(configurations.jarIncludes).rename { "amidst-forge_amidst.jar" }
+    from(configurations.jarIncludes).rename { "amidst-forge_amidst.jar.zip" }
     destinationDir = embeddedJarDir
 }
 
 sourceSets.main.output.dir embeddedJarDir, builtBy: tasks["copyAmidstJar"]
 
 jar {
-    dependsOn configurations.shade
-    from({
-        (configurations.shade - configurations.minecraft).collect { it.isDirectory() ? it : zipTree(it) }
-    }) {
-        exclude 'META-INF/MANIFEST.MF'
-        exclude 'META-INF/versions/**/*'
-        exclude '**/module-info.class'
-    }
     manifest {
         from sharedManifest
     }
@@ -163,7 +148,7 @@ project(':amidst') {
 
     repositories {
         jcenter()
-        maven { url file("m2")}
+        maven { url file("m2") }
     }
 
     def props = new Properties()
@@ -196,15 +181,33 @@ project(':amidst') {
 
 }
 
+shadowJar {
+    relocate 'com.google.flatbuffers', 'relocated.flatbufffers'
+    exclude 'META-INF/versions/**/*'
+    configurations = [project.configurations.shade]
+}
+
+artifacts {
+    shadow shadowJar
+}
+
 // Example configuration to allow publishing using the maven-publish task
 // we define a custom artifact that is sourced from the reobfJar output task
 // and then declare that to be published
 // Note you'll need to add a repository here
 def reobfFile = file("$buildDir/reobfJar/output.jar")
+
 def reobfArtifact = artifacts.add('default', reobfFile) {
     type 'jar'
     builtBy 'reobfJar'
 }
+gradle.projectsEvaluated {
+    reobfJar {
+        dependsOn "shadowJar"
+        input = shadowJar.archivePath
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -217,3 +220,4 @@ publishing {
         }
     }
 }
+

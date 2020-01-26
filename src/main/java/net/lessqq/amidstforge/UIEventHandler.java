@@ -158,7 +158,7 @@ public class UIEventHandler {
 
     private Path extractAmidstJar() throws IOException {
         Path amidstJar = File.createTempFile("amidst", ".jar").toPath();
-        try (InputStream is = AmidstForgeMod.class.getResourceAsStream("/amidst-forge_amidst.jar")) {
+        try (InputStream is = AmidstForgeMod.class.getResourceAsStream("/amidst-forge_amidst.jar.zip")) {
             Files.copy(is, amidstJar, StandardCopyOption.REPLACE_EXISTING);
         }
         return amidstJar;

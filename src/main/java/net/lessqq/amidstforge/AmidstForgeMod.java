@@ -8,8 +8,14 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 @Mod(AmidstForgeMod.MOD_ID)
 public class AmidstForgeMod {
@@ -44,7 +50,17 @@ public class AmidstForgeMod {
     }
 
     private void startServer() {
-        amidstRemoteServer = new AmidstRemoteServer(AMIDST_REMOTE_PORT, amidstInterface);
+
+        URLClassLoader fixedClassLoader;
+        try {
+            // Service discovery in forge is broken, see
+            // https://github.com/MinecraftForge/MinecraftForge/issues/6029
+            // and https://github.com/cpw/modlauncher/issues/39
+            fixedClassLoader = new URLClassLoader(new URL[]{FMLLoader.getLoadingModList().getModFileById(AmidstForgeMod.MOD_ID).getFile().getFilePath().toUri().toURL()}, AmidstForgeMod.class.getClassLoader());
+        } catch (MalformedURLException e) {
+            throw new UncheckedIOException("failed to build mod url", e);
+        }
+        amidstRemoteServer = new AmidstRemoteServer(AMIDST_REMOTE_PORT, amidstInterface, fixedClassLoader);
         Runtime.getRuntime().addShutdownHook(new Thread(AmidstForgeMod.this::stopServer));
     }
 
