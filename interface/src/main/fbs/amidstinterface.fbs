@@ -45,8 +45,9 @@ table CreateNewWorldReply {
 
 }
 
-rpc_service AmidstInterface {
-  GetBiomeData(BiomeDataRequest):BiomeDataReply;
-  GetBiomeList(GetBiomeListRequest):BiomeListReply;
-  CreateNewWorld(CreateWorldRequest):CreateNewWorldReply;
+// SHM Stuff
+table Header {
+    messageNo:long;
+    // position in the data buffer the data starts at.
+    dataPos:int;
 }

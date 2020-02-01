@@ -15,6 +15,7 @@ public final class BiomeEntry extends Table {
   public BiomeEntry __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public int biomeId() { int o = __offset(4); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public boolean mutateBiomeId(int biomeId) { int o = __offset(4); if (o != 0) { bb.putInt(o + bb_pos, biomeId); return true; } else { return false; } }
   public String biomeName() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer biomeNameAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer biomeNameInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }

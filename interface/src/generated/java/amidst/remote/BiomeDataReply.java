@@ -18,6 +18,7 @@ public final class BiomeDataReply extends Table {
   public int dataLength() { int o = __offset(4); return o != 0 ? __vector_len(o) : 0; }
   public ByteBuffer dataAsByteBuffer() { return __vector_as_bytebuffer(4, 4); }
   public ByteBuffer dataInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 4, 4); }
+  public boolean mutateData(int j, int data) { int o = __offset(4); if (o != 0) { bb.putInt(__vector(o) + j * 4, data); return true; } else { return false; } }
 
   public static int createBiomeDataReply(FlatBufferBuilder builder,
       int dataOffset) {

@@ -69,7 +69,7 @@ task createFlatBuffers() {
             project.exec { cmd ->
                 cmd.workingDir = projectDir
                 cmd.executable "$buildDir/tmp/flatc/flatc.exe"
-                cmd.args "--java", "-o", outputDir, "$inputFile"
+                cmd.args "--java", "--gen-mutable", "-o", outputDir, "$inputFile"
             }
         }
     }

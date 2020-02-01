@@ -15,6 +15,7 @@ public final class CreateWorldRequest extends Table {
   public CreateWorldRequest __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public long seed() { int o = __offset(4); return o != 0 ? bb.getLong(o + bb_pos) : 0L; }
+  public boolean mutateSeed(long seed) { int o = __offset(4); if (o != 0) { bb.putLong(o + bb_pos, seed); return true; } else { return false; } }
   public String worldType() { int o = __offset(6); return o != 0 ? __string(o + bb_pos) : null; }
   public ByteBuffer worldTypeAsByteBuffer() { return __vector_as_bytebuffer(6, 1); }
   public ByteBuffer worldTypeInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 6, 1); }

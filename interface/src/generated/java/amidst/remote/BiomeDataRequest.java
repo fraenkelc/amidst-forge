@@ -15,10 +15,15 @@ public final class BiomeDataRequest extends Table {
   public BiomeDataRequest __assign(int _i, ByteBuffer _bb) { __init(_i, _bb); return this; }
 
   public int x() { int o = __offset(4); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public boolean mutateX(int x) { int o = __offset(4); if (o != 0) { bb.putInt(o + bb_pos, x); return true; } else { return false; } }
   public int y() { int o = __offset(6); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public boolean mutateY(int y) { int o = __offset(6); if (o != 0) { bb.putInt(o + bb_pos, y); return true; } else { return false; } }
   public int width() { int o = __offset(8); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public boolean mutateWidth(int width) { int o = __offset(8); if (o != 0) { bb.putInt(o + bb_pos, width); return true; } else { return false; } }
   public int height() { int o = __offset(10); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public boolean mutateHeight(int height) { int o = __offset(10); if (o != 0) { bb.putInt(o + bb_pos, height); return true; } else { return false; } }
   public boolean useQuarterResolution() { int o = __offset(12); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
+  public boolean mutateUseQuarterResolution(boolean useQuarterResolution) { int o = __offset(12); if (o != 0) { bb.put(o + bb_pos, (byte)(useQuarterResolution ? 1 : 0)); return true; } else { return false; } }
 
   public static int createBiomeDataRequest(FlatBufferBuilder builder,
       int x,
