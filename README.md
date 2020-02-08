@@ -23,7 +23,21 @@ Start Amidst using one of these methods. Once started you can select a seed usin
 
 Some Mods (e.g. GeographiCraft) tie their world generation to a specific dimension. The button "Amidst Overworld" adds in rudimentary support for these mods. This button is enabled once you've created / joined a local singleplayer world.
 Once started use the function "New from seed" / "New from random seed" to open the map.
-> Note: the entered and displayed seed value is wrong and is ignored. The "Amidst Overworld" feature uses the seed of the currently running minecraft world.    
+> Note: the entered and displayed seed value is wrong and is ignored. The "Amidst Overworld" feature uses the seed of the currently running minecraft world. The same holds true for the world type selection in Amidst: It is ignored and the World Type selected in Minecraft is used.
+
+### Custom World Types
+Custom World Types added by Mods (e.g. Biomes O Plenty) are currently not selectable in Amidst. To get maps for such worlds you can use the "Amidst Overworld" functionality
+
+### Biome Colors
+Modded biomes are shown with random colors in Amidst by default. These colors can be customized using the Amidst Biome Profile funtionality. For this you have to follow the following steps:
+* Create a folder called "biome" inside your minecraft instance folder
+* Start amidst from minecraft
+* Amidst now generates the file "default.json" inside the biome folder. This file can be edited and custom biomes can be added.
+  The names for the modded biomes need to match the names shown inside amidst when hovering over a biome.
+* The biome profile can be selected and reloaded from the Amidst menu ![picture showing the amidst biome profile menu](https://user-images.githubusercontent.com/4005102/74064598-4c0ca880-49f3-11ea-857f-8a22f36f1551.png)
+
+This example shows changing the a modded biome to the color white:
+![example of how to change the biome color](https://user-images.githubusercontent.com/4005102/74064729-93933480-49f3-11ea-9ff8-84730af2538e.png)
 
 Known issues
 ------------
